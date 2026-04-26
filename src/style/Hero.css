@@ -1,0 +1,51 @@
+.hero {
+  background: var(--green-dark);
+  padding: 64px 32px;
+  text-align: center;
+}
+
+.hero-content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.hero-title {
+  font-family: 'Caveat', cursive;
+  font-size: 3.5rem;
+  color: var(--cream);
+  margin: 0 0 8px;
+}
+
+.hero-subtitle {
+  font-family: 'Caveat', cursive;
+  font-size: 1.4rem;
+  color: var(--green-light);
+  margin: 0 0 16px;
+}
+
+.hero-desc {
+  font-family: 'Caveat', cursive;
+  font-size: 1.1rem;
+  color: rgba(245, 240, 220, 0.8);
+  margin: 0 0 28px;
+  line-height: 1.6;
+}
+
+.hero-btn {
+  display: inline-block;
+  padding: 12px 32px;
+  background: var(--cream);
+  color: var(--green-dark);
+  font-family: 'Caveat', cursive;
+  font-size: 1.2rem;
+  font-weight: 700;
+  border-radius: 999px;
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 3px 3px 0 var(--green-mid);
+}
+
+.hero-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 var(--green-mid);
+}

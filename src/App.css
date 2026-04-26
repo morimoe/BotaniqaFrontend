@@ -1,27 +1,41 @@
-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 32px;
-  background-color: #2d6a4f;
-  color: white;
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&display=swap');
+
+:root {
+  --green-dark: #2c5a3c;
+  --green-mid: #4a8060;
+  --green-light: #a8c8a0;
+  --cream: #f5f0dc;
 }
 
-header h1 {
+* {
+  box-sizing: border-box;
   margin: 0;
+  padding: 0;
 }
 
-nav {
+body {
+  background: var(--green-dark);
+  font-family: 'Caveat', cursive;
+  min-height: 100vh;
+}
+
+.app {
+  min-height: 100vh;
   display: flex;
-  gap: 24px;
+  flex-direction: column;
 }
 
-nav a {
-  color: white;
-  text-decoration: none;
-  font-size: 16px;
+.state-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Caveat', cursive;
+  font-size: 2rem;
+  color: var(--cream);
+  background: var(--green-dark);
 }
 
-nav a:hover {
-  text-decoration: underline;
+.error-screen {
+  color: #ff9a9a;
 }

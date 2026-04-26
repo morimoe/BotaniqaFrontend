@@ -1,0 +1,16 @@
+.counter-bar {
+  background: rgba(44, 90, 60, 0.15);
+  border-top: 1px solid rgba(44, 90, 60, 0.2);
+  display: flex;
+  gap: 32px;
+  justify-content: center;
+  padding: 10px 32px;
+  font-family: 'Caveat', cursive;
+  font-size: 1rem;
+  color: var(--green-dark);
+  flex-wrap: wrap;
+}
+
+.counter-bar strong {
+  color: var(--green-dark);
+}

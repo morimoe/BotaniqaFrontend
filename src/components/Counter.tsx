@@ -1,11 +1,17 @@
-type Props = {
-  count: number
-}
+import "./Counter.css";
 
-function Counter({ count }: Props) {
+type CounterProps = {
+  total: number;
+  cartCount: number;
+  favoritesCount: number;
+};
+
+export default function Counter({ total, cartCount, favoritesCount }: CounterProps) {
   return (
-    <p>Найдено: {count} товаров</p>
-  )
+    <div className="counter-bar">
+      <span>Товаров в каталоге: <strong>{total}</strong></span>
+      <span>В избранном: <strong>{favoritesCount}</strong></span>
+      <span>В корзине: <strong>{cartCount}</strong></span>
+    </div>
+  );
 }
-
-export default Counter

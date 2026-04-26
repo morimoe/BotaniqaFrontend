@@ -1,0 +1,43 @@
+.catalog-section {
+  background: var(--green-dark);
+  padding: 24px 32px 48px;
+  flex: 1;
+}
+
+.catalog-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  gap: 28px;
+  align-items: flex-start;
+}
+
+.catalog-grid-wrap {
+  flex: 1;
+}
+
+.catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 0;
+  gap: 16px;
+}
+
+.empty-emoji {
+  font-size: 4rem;
+}
+
+.empty-state p {
+  font-family: 'Caveat', cursive;
+  font-size: 1.5rem;
+  color: var(--cream);
+  margin: 0;
+}
