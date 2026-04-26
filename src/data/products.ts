@@ -13,7 +13,11 @@ export const products: Product[] = [
   { id: 4, name: "Опунция", price: 290, category: "cacti", image: "" },
   { id: 5, name: "Гимнокалициум", price: 410, category: "cacti", image: "" },
   { id: 6, name: "Трихоцереус", price: 670, category: "cacti", image: "" },
+
+  { id: 7, name: "Трихоцереус", price: 670, category: "succulents", image: "" },
+  { id: 8, name: "Трихоцереус", price: 670, category: "succulents", image: "" },
 ]
+
 
 export const categories = [
   { id: "all", label: "Все растения" },

@@ -8,16 +8,15 @@ import "./App.css";
 
 function App() {
   const [search, setSearch] = useState<string>("");
-  const [activeCategory, setActiveCategory] = useState<string>("cacti");
-  const [cartCount, setCartCount] = useState<number>(0);
+const [activeCategory, setActiveCategory] = useState<string>("all");  const [cartCount, setCartCount] = useState<number>(0);
   const [favorites, setFavorites] = useState<number[]>([]);
   const [cartMap, setCartMap] = useState<Record<number, number>>({});
 
   const filtered = mockProducts.filter((p) => {
-    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
-    const matchCat = p.category === activeCategory;
-    return matchSearch && matchCat;
-  });
+  const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
+  const matchCat = activeCategory === "all" || p.category === activeCategory;
+  return matchSearch && matchCat;
+});
 
   const handleToggleFavorite = (id: number) => {
     setFavorites((prev) =>

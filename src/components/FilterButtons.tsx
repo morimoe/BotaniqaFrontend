@@ -9,6 +9,12 @@ type FilterButtonsProps = {
 export default function FilterButtons({ activeCategory, onSelect }: FilterButtonsProps) {
   return (
     <div className="filter-sidebar">
+      <button
+        className={`filter-item ${activeCategory === "all" ? "active" : ""}`}
+        onClick={() => onSelect("all")}
+      >
+        Все &gt;
+      </button>
       {categories.slice(1).map((cat) => (
         <button
           key={cat.id}
