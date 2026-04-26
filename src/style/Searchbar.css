@@ -1,0 +1,17 @@
+.searchbar-section {
+  background: var(--green-dark);
+  padding: 20px 32px 0;
+}
+
+.searchbar-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.found-count {
+  font-family: 'Caveat', cursive;
+  font-size: 1.5rem;
+  color: var(--cream);
+  margin: 0;
+  padding-bottom: 16px;
+}

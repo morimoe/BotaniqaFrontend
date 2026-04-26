@@ -1,11 +1,12 @@
-function Hero() {
-  return (
-    <section>
-      <h2>Добро пожаловать в Botaniqa </h2>
-      <p>Растения для вашего дома и офиса</p>
-      <button>Перейти к каталогу</button>
-    </section>
-  )
-}
+import "./Hero.css";
 
-export default Hero
+export default function Hero() {
+  return (
+    <section className="hero" id="hero">
+      <div className="hero-content">
+        <h1 className="hero-title">BoTaNiQa</h1>
+        <p className="hero-subtitle">Растения для вашего дома и офиса</p>
+      </div>
+    </section>
+  );
+}

@@ -1,16 +1,21 @@
-type Props = {
-  value: string
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-}
+import "../style/Searchbar.css";
 
-function SearchBar({ value, onChange }: Props) {
+type SearchBarProps = {
+  value: string;
+  onChange: (value: string) => void;
+  count: number;
+};
+
+export default function SearchBar({ value, count }: SearchBarProps) {
   return (
-    <input
-      value={value}
-      onChange={onChange}
-      placeholder="Поиск растения..."
-    />
-  )
+    <section className="searchbar-section" id="catalog">
+      <div className="searchbar-inner">
+        {value ? (
+          <p className="found-count">Найдено: {count} товаров</p>
+        ) : (
+          <p className="found-count">Все растения: {count}</p>
+        )}
+      </div>
+    </section>
+  );
 }
-
-export default SearchBar

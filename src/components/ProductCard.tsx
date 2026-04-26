@@ -1,24 +1,59 @@
-import { useState } from "react"
+import { useState } from "react";
+import { type Product } from "../data/products";
+import "../style/ProductCard.css";
 
-type Props = {
-  name: string
-  price: number
-  image: string
-}
+type ProductCardProps = Product & {
+  onAddToCart: () => void;
+  onToggleFavorite: () => void;
+  isFavorite: boolean;
+};
 
-function ProductCard({ name, price, image }: Props) {
-  const [liked, setLiked] = useState(false)
+export default function ProductCard({
+  name,
+  price,
+  image,
+  onAddToCart,
+  onToggleFavorite,
+  isFavorite,
+}: ProductCardProps) {
+  const [inCart, setInCart] = useState(false);
+
+  const handleCart = () => {
+    setInCart(true);
+    onAddToCart();
+    setTimeout(() => setInCart(false), 1000);
+  };
 
   return (
-    <div>
-      <img src={image} alt={name} width={300} height={200} style={{objectFit: "cover"}} />
-      <h3>{name}</h3>
-      <p>{price} MDL</p>
-      <button onClick={() => setLiked(!liked)}>
-        {liked ? "❤️ Liked" : "🤍 Like"}
-      </button>
+    <div className="product-card">
+      <div className="card-image-wrap">
+        {image ? (
+          <img src={image} alt={name} className="card-image" />
+        ) : (
+          <div className="card-image-placeholder">placeholder</div>
+        )}
+      </div>
+      <div className="card-body">
+        <h3 className="card-name">{name}</h3>
+        <div className="card-footer">
+  <div className="card-left">
+    <span className="card-price">{price} MDL</span>
+    <button
+      className={`like-btn ${isFavorite ? "liked" : ""}`}
+      onClick={onToggleFavorite}
+      title={isFavorite ? "Убрать из избранного" : "В избранное"}
+    >
+      {isFavorite ? "❤️" : "🤍"}
+    </button>
+  </div>
+  <button
+    className={`cart-btn ${inCart ? "added" : ""}`}
+    onClick={handleCart}
+  >
+    {inCart ? "✓" : "Купить"}
+  </button>
+</div>
+      </div>
     </div>
-  )
+  );
 }
-
-export default ProductCard
