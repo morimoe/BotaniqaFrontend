@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import "../style/Header.css";
 
 type HeaderProps = {
@@ -17,6 +17,18 @@ export default function Header({
   onCategoryChange,
 }: HeaderProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleMouseEnter = () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    setDropdownOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    closeTimer.current = setTimeout(() => {
+      setDropdownOpen(false);
+    }, 300);
+  };
 
   return (
     <header className="header">
@@ -50,12 +62,15 @@ export default function Header({
           </button>
         </div>
       </div>
-
       <nav className="header-nav">
-        <div className="nav-dropdown-wrap">
+        <div
+          className="nav-dropdown-wrap"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
           <button
             className="nav-link"
-            onClick={() => setDropdownOpen((prev) => !prev)}
+            onClick={() => onCategoryChange("all")}
           >
             Каталог ∨
           </button>

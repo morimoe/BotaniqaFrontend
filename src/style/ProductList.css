@@ -41,3 +41,24 @@
   color: var(--cream);
   margin: 0;
 }
+
+@media (max-width: 768px) {
+  .catalog-section {
+    padding: 16px 12px 32px;
+  }
+  .catalog-inner {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .catalog-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .catalog-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+}

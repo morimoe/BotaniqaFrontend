@@ -36,23 +36,23 @@ export default function ProductCard({
       <div className="card-body">
         <h3 className="card-name">{name}</h3>
         <div className="card-footer">
-  <div className="card-left">
-    <span className="card-price">{price} MDL</span>
-    <button
-      className={`like-btn ${isFavorite ? "liked" : ""}`}
-      onClick={onToggleFavorite}
-      title={isFavorite ? "Убрать из избранного" : "В избранное"}
-    >
-      {isFavorite ? "❤️" : "🤍"}
-    </button>
-  </div>
-  <button
-    className={`cart-btn ${inCart ? "added" : ""}`}
-    onClick={handleCart}
-  >
-    {inCart ? "✓" : "Купить"}
-  </button>
-</div>
+          <span className="card-price">{price} MDL</span>
+          <div className="card-actions">
+            <button
+              className={`like-btn ${isFavorite ? "liked" : ""}`}
+              onClick={onToggleFavorite}
+              title={isFavorite ? "Убрать из избранного" : "В избранное"}
+            >
+              {isFavorite ? "❤️" : "🤍"}
+            </button>
+            <button
+              className={`cart-btn ${inCart ? "added" : ""}`}
+              onClick={handleCart}
+            >
+              {inCart ? "✓" : "Купить"}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
