@@ -1,5 +1,6 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import "../style/Header.css";
+import { useNavigate } from "react-router-dom";
 
 type HeaderProps = {
   search: string;
@@ -16,6 +17,23 @@ export default function Header({
   cartCount,
   onCategoryChange,
 }: HeaderProps) {
+  const navigate = useNavigate();
+  const [username, setUsername] = useState<string | null>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("username");
+    setUsername(stored);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("username");
+    localStorage.removeItem("cart");
+    localStorage.removeItem("favorites");
+    setUsername(null);
+    window.dispatchEvent(new Event("storage")); // ← добавить
+    navigate("/");
+};
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -47,15 +65,27 @@ export default function Header({
           />
         </div>
         <div className="header-icons">
-          <button className="icon-btn" title="Регистрация">👤</button>
-          <button className="icon-btn" title="Избранное">
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            {username && (
+              <span style={{ fontFamily: "Caveat, cursive", fontSize: "1rem", color: "var(--green-dark)" }}>
+                {username}
+              </span>
+            )}
+            <button
+              className="icon-btn"
+              title={username ? "Выйти" : "Войти"}
+              onClick={username ? handleLogout : () => navigate("/login")}
+            >
+              {username ? "🚪" : "👤"}
+            </button>
+          </div>
+          <button className="icon-btn" title="Избранное" onClick={() => navigate("/favorites")}>
             🤍
             {favoritesCount > 0 && (
               <span className="badge">{favoritesCount > 9 ? "9+" : favoritesCount}</span>
             )}
           </button>
-          <button className="icon-btn" title="Корзина">
-            🛒
+              <button className="icon-btn" title="Корзина" onClick={() => navigate("/cart")}>            🛒
             {cartCount > 0 && (
               <span className="badge">{cartCount > 9 ? "9+" : cartCount}</span>
             )}
@@ -96,8 +126,8 @@ export default function Header({
             </div>
           )}
         </div>
-        <a href="#about" className="nav-link">Избранное 🤍</a>
-        <a href="#about" className="nav-link">О нас</a>
+        <span className="nav-link" onClick={() => navigate("/favorites")} style={{ cursor: "pointer" }}>Избранное 🤍</span>
+        <span className="nav-link" onClick={() => navigate("/about")} style={{ cursor: "pointer" }}>О нас</span>
       </nav>
     </header>
   );
