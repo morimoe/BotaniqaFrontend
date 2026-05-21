@@ -1,21 +1,37 @@
 import { useNavigate } from "react-router-dom";
-
 import ProductCard from "../components/ProductCard";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+type Product = {
+  id: number;
+  productName: string;
+  description: string;
+  price: number;
+  stock: number;
+  image: string;
+};
 
 export default function FavoritesPage() {
   const navigate = useNavigate();
-  const favoriteIds: number[] = JSON.parse(localStorage.getItem("favorites") || "[]");
-  const favoriteProducts = products.filter(p => favoriteIds.includes(p.id));
-  const [favorites, setFavorites] = useState<number[]>(favoriteIds);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [favorites, setFavorites] = useState<number[]>(
+    JSON.parse(localStorage.getItem("favorites") || "[]")
+  );
 
   const getCartCount = () => {
     const cart = JSON.parse(localStorage.getItem("cart") || "{}");
     return Object.values(cart).reduce((a: number, b) => a + (b as number), 0) as number;
   };
   const [cartCount, setCartCount] = useState<number>(getCartCount());
+
+  useEffect(() => {
+    fetch("https://localhost:7266/api/product/all")
+      .then(res => res.json())
+      .then(data => setAllProducts(data))
+      .catch(err => console.error("Ошибка загрузки продуктов:", err));
+  }, []);
 
   const handleToggleFavorite = (id: number) => {
     setFavorites((prev) => {
@@ -33,7 +49,7 @@ export default function FavoritesPage() {
     setCartCount(getCartCount());
   };
 
-  const visibleProducts = favoriteProducts.filter(p => favorites.includes(p.id));
+  const visibleProducts = allProducts.filter(p => favorites.includes(p.id));
 
   return (
     <div className="app">
