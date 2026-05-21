@@ -1,15 +1,23 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { products } from "../data/products";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 
+type Product = {
+  id: number;
+  productName: string;
+  description: string;
+  price: number;
+  stock: number;
+  image: string;
+};
+
 export default function CartPage() {
   const navigate = useNavigate();
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
 
   const [cartMap, setCartMap] = useState<Record<number, number>>(() => {
     const stored = JSON.parse(localStorage.getItem("cart") || "{}");
-    // Конвертируем ключи в числа
     return Object.fromEntries(Object.entries(stored).map(([k, v]) => [Number(k), v as number]));
   });
 
@@ -19,7 +27,14 @@ export default function CartPage() {
 
   const favoritesCount = JSON.parse(localStorage.getItem("favorites") || "[]").length;
 
-  // Сбрасываем корзину если пользователь вышел
+  // Загрузка продуктов из API
+  useEffect(() => {
+    fetch("https://localhost:7266/api/product/all")
+      .then((res) => res.json())
+      .then(setAllProducts)
+      .catch(console.error);
+  }, []);
+
   useEffect(() => {
     const handleStorage = () => {
       const stored = JSON.parse(localStorage.getItem("cart") || "{}");
@@ -31,7 +46,7 @@ export default function CartPage() {
     return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
-  const cartProducts = products.filter(p => cartMap[p.id] > 0);
+  const cartProducts = allProducts.filter(p => cartMap[p.id] > 0);
   const totalCartCount = Object.values(cartMap).reduce((a, b) => a + b, 0);
 
   const toggleSelect = (id: number) => {
@@ -64,7 +79,7 @@ export default function CartPage() {
       const newQty = Math.max(1, (prev[id] || 1) + delta);
       const updated = { ...prev, [id]: newQty };
       localStorage.setItem("cart", JSON.stringify(updated));
-      syncAddToCart(id, delta); // отправляем изменение на бэк
+      syncAddToCart(id, delta);
       return updated;
     });
   };
@@ -78,7 +93,6 @@ export default function CartPage() {
     syncRemoveFromCart(id);
   };
 
-  // Синхронизация с бэком
   const syncAddToCart = (productId: number, quantity: number) => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -116,7 +130,6 @@ export default function CartPage() {
       />
 
       <div style={{ padding: "32px 48px", display: "flex", gap: "24px", alignItems: "flex-start" }}>
-
         <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "12px" }}>
           <div style={{ background: "var(--cream)", borderRadius: "16px", padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <label style={{ display: "flex", alignItems: "center", gap: "10px", fontFamily: "Caveat, cursive", fontSize: "1.2rem", color: "var(--green-dark)", cursor: "pointer" }}>
@@ -147,9 +160,9 @@ export default function CartPage() {
                     onChange={() => toggleSelect(p.id)}
                     style={{ width: "18px", height: "18px", accentColor: "var(--green-dark)" }}
                   />
-                  <img src={p.image} alt={p.name} style={{ width: "80px", height: "80px", objectFit: "cover", borderRadius: "12px" }} />
+                  <img src={p.image} alt={p.productName} style={{ width: "80px", height: "80px", objectFit: "cover", borderRadius: "12px" }} />
                   <div style={{ flex: 1 }}>
-                    <p style={{ fontFamily: "Caveat, cursive", fontSize: "1.2rem", color: "var(--green-dark)", textAlign: "left" }}>{p.name}</p>
+                    <p style={{ fontFamily: "Caveat, cursive", fontSize: "1.2rem", color: "var(--green-dark)", textAlign: "left" }}>{p.productName}</p>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px" }}>
                       <button onClick={() => changeQuantity(p.id, -1)} style={{ background: "none", border: "none", fontSize: "1.1rem", cursor: "pointer", color: "var(--green-dark)" }}>−</button>
                       <span style={{ fontFamily: "Caveat, cursive", fontSize: "1.1rem", color: "var(--green-dark)" }}>{cartMap[p.id]}</span>
@@ -176,7 +189,6 @@ export default function CartPage() {
             Оформить заказ
           </button>
         </div>
-
       </div>
 
       <Footer />

@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { products as mockProducts } from "../data/products";
 import Header from "../components/Header";
 import SearchBar from "../components/SearchBar";
 import ProductList from "../components/ProductList";
@@ -8,7 +7,17 @@ import "../App.css";
 
 type SortOption = "default" | "price-asc" | "price-desc" | "name-asc" | "name-desc";
 
+type Product = {
+  id: number;
+  productName: string;
+  description: string;
+  price: number;
+  stock: number;
+  image: string;
+};
+
 export default function HomePage() {
+  const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState<string>("");
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [cartCount, setCartCount] = useState<number>(() => {
@@ -27,32 +36,37 @@ export default function HomePage() {
   });
   const [sort, setSort] = useState<SortOption>("default");
 
+  // Загрузка продуктов из API
   useEffect(() => {
-  const handleStorage = () => {
-    const stored = localStorage.getItem("cart");
-    const newCart = stored ? JSON.parse(stored) : {};
-    setCartMap(newCart);
-    setCartCount(Object.values(newCart as Record<number, number>).reduce((a, b) => a + b, 0));
+    fetch("https://localhost:7266/api/product/all")
+      .then((res) => res.json())
+      .then(setProducts)
+      .catch(console.error);
+  }, []);
 
-    const storedFavs = localStorage.getItem("favorites");
-    setFavorites(storedFavs ? JSON.parse(storedFavs) : []);
-  };
+  useEffect(() => {
+    const handleStorage = () => {
+      const stored = localStorage.getItem("cart");
+      const newCart = stored ? JSON.parse(stored) : {};
+      setCartMap(newCart);
+      setCartCount(Object.values(newCart as Record<number, number>).reduce((a, b) => a + b, 0));
+      const storedFavs = localStorage.getItem("favorites");
+      setFavorites(storedFavs ? JSON.parse(storedFavs) : []);
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
 
-  window.addEventListener("storage", handleStorage);
-  return () => window.removeEventListener("storage", handleStorage);
-}, []);
-
-  const filtered = mockProducts
+  const filtered = products
     .filter((p) => {
-      const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
-      const matchCat = activeCategory === "all" || p.category === activeCategory;
-      return matchSearch && matchCat;
+      const matchSearch = p.productName.toLowerCase().includes(search.toLowerCase());
+      return matchSearch;
     })
     .sort((a, b) => {
       if (sort === "price-asc") return a.price - b.price;
       if (sort === "price-desc") return b.price - a.price;
-      if (sort === "name-asc") return a.name.localeCompare(b.name, "ru");
-      if (sort === "name-desc") return b.name.localeCompare(a.name, "ru");
+      if (sort === "name-asc") return a.productName.localeCompare(b.productName, "ru");
+      if (sort === "name-desc") return b.productName.localeCompare(a.productName, "ru");
       return 0;
     });
 
@@ -60,7 +74,6 @@ export default function HomePage() {
     setFavorites((prev) => {
       const updated = prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id];
       localStorage.setItem("favorites", JSON.stringify(updated));
-
       const token = localStorage.getItem("token");
       if (token) {
         fetch(`https://localhost:7266/api/favorites/${id}`, {
@@ -68,7 +81,6 @@ export default function HomePage() {
           headers: { Authorization: `Bearer ${token}` }
         });
       }
-
       return updated;
     });
   };
@@ -77,7 +89,6 @@ export default function HomePage() {
     setCartMap((prev) => {
       const updated = { ...prev, [id]: (prev[id] || 0) + 1 };
       localStorage.setItem("cart", JSON.stringify(updated));
-
       const token = localStorage.getItem("token");
       if (token) {
         fetch("https://localhost:7266/api/cart", {
@@ -89,7 +100,6 @@ export default function HomePage() {
           body: JSON.stringify({ productId: id, quantity: 1 })
         });
       }
-
       return updated;
     });
     setCartCount((c) => c + 1);

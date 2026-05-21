@@ -1,15 +1,20 @@
 import { useState } from "react";
-import { type Product } from "../data/products";
 import "../style/ProductCard.css";
 
-type ProductCardProps = Product & {
+type ProductCardProps = {
+  id: number;
+  productName: string;
+  description: string;
+  price: number;
+  stock: number;
+  image: string;
   onAddToCart: () => void;
   onToggleFavorite: () => void;
   isFavorite: boolean;
 };
 
 export default function ProductCard({
-  name,
+  productName,
   price,
   image,
   onAddToCart,
@@ -28,13 +33,13 @@ export default function ProductCard({
     <div className="product-card">
       <div className="card-image-wrap">
         {image ? (
-          <img src={image} alt={name} className="card-image" />
+          <img src={image} alt={productName} className="card-image" />
         ) : (
           <div className="card-image-placeholder">placeholder</div>
         )}
       </div>
       <div className="card-body">
-        <h3 className="card-name">{name}</h3>
+        <h3 className="card-name">{productName}</h3>
         <div className="card-footer">
           <span className="card-price">{price} MDL</span>
           <div className="card-actions">

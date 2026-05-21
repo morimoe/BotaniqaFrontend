@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { products } from "../data/products";
+
 import ProductCard from "../components/ProductCard";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
