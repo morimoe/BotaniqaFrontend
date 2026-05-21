@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -5,13 +6,22 @@ import Footer from "../components/Footer";
 export default function AboutPage() {
   const navigate = useNavigate();
 
+  const [favoritesCount] = useState(
+    JSON.parse(localStorage.getItem("favorites") || "[]").length
+  );
+
+  const [cartCount] = useState(() => {
+    const cart = JSON.parse(localStorage.getItem("cart") || "{}");
+    return Object.values(cart).reduce((a: number, b) => a + (b as number), 0);
+  });
+
   return (
     <div className="app">
       <Header
         search=""
         onSearchChange={() => {}}
-        favoritesCount={0}
-        cartCount={0}
+        favoritesCount={favoritesCount}
+        cartCount={cartCount}
         onCategoryChange={() => navigate("/")}
       />
 
@@ -29,7 +39,6 @@ export default function AboutPage() {
 
         {/* Карточки */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "24px" }}>
-          
           {[
             { emoji: "🌱", title: "Наша миссия", text: "Мы хотим чтобы каждый дом был живым. Растения делают пространство теплее, воздух чище, а настроение лучше." },
             { emoji: "🤍", title: "С любовью", text: "Каждое растение у нас выращено с заботой. Мы отбираем только здоровые и красивые экземпляры для наших покупателей." },
@@ -48,7 +57,6 @@ export default function AboutPage() {
               <p style={{ fontFamily: "Caveat, cursive", fontSize: "1.2rem", color: "var(--green-mid)", lineHeight: 1.5 }}>{card.text}</p>
             </div>
           ))}
-
         </div>
 
         {/* История */}
@@ -57,9 +65,9 @@ export default function AboutPage() {
           <div>
             <h2 style={{ fontFamily: "Caveat, cursive", fontSize: "2rem", color: "var(--green-dark)", marginBottom: "12px" }}>Наша история</h2>
             <p style={{ fontFamily: "Caveat, cursive", fontSize: "1.2rem", color: "var(--green-mid)", lineHeight: 1.6 }}>
-              BoTaNiQa началась как маленькая коллекция кактусов на подоконнике. 
-              Потом появились суккуленты, орхидеи, стрелиции... 
-              Сейчас мы — полноценный магазин, но душа осталась та же — 
+              BoTaNiQa началась как маленькая коллекция кактусов на подоконнике.
+              Потом появились суккуленты, орхидеи, стрелиции...
+              Сейчас мы — полноценный магазин, но душа осталась та же —
               искренняя любовь к зелёным друзьям.
             </p>
           </div>
