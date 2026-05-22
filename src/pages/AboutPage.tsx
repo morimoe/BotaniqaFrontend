@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -6,22 +5,11 @@ import Footer from "../components/Footer";
 export default function AboutPage() {
   const navigate = useNavigate();
 
-  const [favoritesCount] = useState(
-    JSON.parse(localStorage.getItem("favorites") || "[]").length
-  );
-
-  const [cartCount] = useState(() => {
-    const cart = JSON.parse(localStorage.getItem("cart") || "{}");
-    return Object.values(cart).reduce((a: number, b) => a + (b as number), 0);
-  });
-
   return (
     <div className="app">
       <Header
         search=""
         onSearchChange={() => {}}
-        favoritesCount={favoritesCount}
-        cartCount={cartCount}
         onCategoryChange={() => navigate("/")}
       />
 

@@ -228,3 +228,26 @@
     gap: 8px;
   }
 }
+
+.user-menu-wrap {
+  position: relative;
+  cursor: pointer;
+}
+
+.user-nick {
+  font-family: 'Caveat', cursive;
+  font-size: 1rem;
+  color: var(--green-dark);
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+
+.user-nick:hover {
+  background: rgba(44, 90, 60, 0.1);
+}
+
+.user-dropdown {
+  right: 0;
+  left: auto;
+}

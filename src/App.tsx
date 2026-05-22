@@ -6,6 +6,7 @@ import RegisterPage from "./pages/RegisterPage";
 import FavoritesPage from "./pages/FavoritesPage";
 import AboutPage from "./pages/AboutPage";
 import CartPage from "./pages/CartPage";
+import SettingsPage from "./pages/SettingsPage";
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
             <CartPage />
           </PrivateRoute>
         } />
+        <Route path="/settings" element={<SettingsPage />} />
       </Routes>
     </BrowserRouter>
   );

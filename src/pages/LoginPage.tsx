@@ -25,12 +25,22 @@ export default function LoginPage() {
       localStorage.setItem("token", data.token);
 
       const decoded: any = jwtDecode(data.token);
+
       const username = decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"];
       localStorage.setItem("username", username);
 
-      // ===== ЗАГРУЖАЕМ КОРЗИНУ И ИЗБРАННОЕ ИЗ БД =====
+      // ── СОХРАНЯЕМ РОЛЬ ──
+      const role =
+        decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ||
+        decoded["role"] ||
+        decoded["Role"] ||
+        "";
+      localStorage.setItem("role", role);
+      // ────────────────────
+
+      // ── ЗАГРУЖАЕМ КОРЗИНУ И ИЗБРАННОЕ ИЗ БД ──
       const cartRes = await fetch("https://localhost:7266/api/cart", {
-        headers: { Authorization: `Bearer ${data.token}` }
+        headers: { Authorization: `Bearer ${data.token}` },
       });
       const cart = await cartRes.json();
       const cartMap: Record<number, number> = {};
@@ -41,12 +51,14 @@ export default function LoginPage() {
       localStorage.setItem("cart", JSON.stringify(cartMap));
 
       const favRes = await fetch("https://localhost:7266/api/favorites", {
-        headers: { Authorization: `Bearer ${data.token}` }
+        headers: { Authorization: `Bearer ${data.token}` },
       });
       const favs = await favRes.json();
-      const favIds = favs.map((i: any) => i.productId);
+      const favIds = [...new Set(favs.map((i: any) => i.productId))];
       localStorage.setItem("favorites", JSON.stringify(favIds));
-      // ================================================
+      window.dispatchEvent(new Event("favoritesUpdated"));
+      window.dispatchEvent(new Event("cartUpdated"));
+      // ──────────────────────────────────────────
 
       navigate("/");
     } catch {
@@ -56,7 +68,7 @@ export default function LoginPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--green-dark)", display: "flex", flexDirection: "column" }}>
-      
+
       {/* Шапка */}
       <div style={{ background: "var(--cream)", borderBottom: "2px solid var(--green-dark)", padding: "14px 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <span
@@ -75,7 +87,7 @@ export default function LoginPage() {
       {/* Форма */}
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{ background: "var(--cream)", borderRadius: "20px", padding: "40px", width: "340px", display: "flex", flexDirection: "column", gap: "16px" }}>
-          
+
           {error && (
             <p style={{ color: "red", fontFamily: "Caveat, cursive", fontSize: "1.1rem", textAlign: "center" }}>{error}</p>
           )}

@@ -5,6 +5,7 @@ export type Product = {
   price: number;
   stock: number;
   image: string;
+  category: string;
 };
 
 export const categories = [

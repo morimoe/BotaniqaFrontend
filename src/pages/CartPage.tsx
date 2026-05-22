@@ -25,7 +25,6 @@ export default function CartPage() {
     Object.keys(JSON.parse(localStorage.getItem("cart") || "{}")).map(Number)
   );
 
-  const favoritesCount = JSON.parse(localStorage.getItem("favorites") || "[]").length;
 
   // Загрузка продуктов из API
   useEffect(() => {
@@ -47,7 +46,6 @@ export default function CartPage() {
   }, []);
 
   const cartProducts = allProducts.filter(p => cartMap[p.id] > 0);
-  const totalCartCount = Object.values(cartMap).reduce((a, b) => a + b, 0);
 
   const toggleSelect = (id: number) => {
     setSelected(prev =>
@@ -124,8 +122,6 @@ export default function CartPage() {
       <Header
         search=""
         onSearchChange={() => {}}
-        favoritesCount={favoritesCount}
-        cartCount={totalCartCount}
         onCategoryChange={() => navigate("/")}
       />
 

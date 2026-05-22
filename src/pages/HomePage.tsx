@@ -14,18 +14,13 @@ type Product = {
   price: number;
   stock: number;
   image: string;
+  category: string;
 };
 
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [search, setSearch] = useState<string>("");
   const [activeCategory, setActiveCategory] = useState<string>("all");
-  const [cartCount, setCartCount] = useState<number>(() => {
-    const stored = localStorage.getItem("cart");
-    if (!stored) return 0;
-    return Object.values(JSON.parse(stored) as Record<number, number>)
-      .reduce((a, b) => a + b, 0);
-  });
   const [favorites, setFavorites] = useState<number[]>(() => {
     const stored = localStorage.getItem("favorites");
     return stored ? JSON.parse(stored) : [];
@@ -36,7 +31,6 @@ export default function HomePage() {
   });
   const [sort, setSort] = useState<SortOption>("default");
 
-  // Загрузка продуктов из API
   useEffect(() => {
     fetch("https://localhost:7266/api/product/all")
       .then((res) => res.json())
@@ -49,7 +43,6 @@ export default function HomePage() {
       const stored = localStorage.getItem("cart");
       const newCart = stored ? JSON.parse(stored) : {};
       setCartMap(newCart);
-      setCartCount(Object.values(newCart as Record<number, number>).reduce((a, b) => a + b, 0));
       const storedFavs = localStorage.getItem("favorites");
       setFavorites(storedFavs ? JSON.parse(storedFavs) : []);
     };
@@ -58,10 +51,8 @@ export default function HomePage() {
   }, []);
 
   const filtered = products
-    .filter((p) => {
-      const matchSearch = p.productName.toLowerCase().includes(search.toLowerCase());
-      return matchSearch;
-    })
+    .filter((p) => p.productName.toLowerCase().includes(search.toLowerCase()))
+    .filter((p) => activeCategory === "all" || p.category === activeCategory) // ← добавь
     .sort((a, b) => {
       if (sort === "price-asc") return a.price - b.price;
       if (sort === "price-desc") return b.price - a.price;
@@ -72,13 +63,17 @@ export default function HomePage() {
 
   const handleToggleFavorite = (id: number) => {
     setFavorites((prev) => {
-      const updated = prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id];
+      const updated = prev.includes(id)
+        ? prev.filter((f) => f !== id)
+        : [...prev, id];
       localStorage.setItem("favorites", JSON.stringify(updated));
+      // Уведомляем Header об изменении избранного
+      window.dispatchEvent(new Event("favoritesUpdated"));
       const token = localStorage.getItem("token");
       if (token) {
         fetch(`https://localhost:7266/api/favorites/${id}`, {
           method: "POST",
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
       }
       return updated;
@@ -89,20 +84,21 @@ export default function HomePage() {
     setCartMap((prev) => {
       const updated = { ...prev, [id]: (prev[id] || 0) + 1 };
       localStorage.setItem("cart", JSON.stringify(updated));
+      // Уведомляем Header об изменении корзины
+      window.dispatchEvent(new Event("cartUpdated"));
       const token = localStorage.getItem("token");
       if (token) {
         fetch("https://localhost:7266/api/cart", {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
           },
-          body: JSON.stringify({ productId: id, quantity: 1 })
+          body: JSON.stringify({ productId: id, quantity: 1 }),
         });
       }
       return updated;
     });
-    setCartCount((c) => c + 1);
   };
 
   return (
@@ -110,8 +106,6 @@ export default function HomePage() {
       <Header
         search={search}
         onSearchChange={setSearch}
-        favoritesCount={favorites.length}
-        cartCount={cartCount}
         onCategoryChange={setActiveCategory}
       />
       <SearchBar
