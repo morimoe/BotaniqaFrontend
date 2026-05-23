@@ -15,6 +15,7 @@ type ProductCardProps = {
 
 export default function ProductCard({
   productName,
+  description,
   price,
   image,
   onAddToCart,
@@ -37,7 +38,13 @@ export default function ProductCard({
         ) : (
           <div className="card-image-placeholder">placeholder</div>
         )}
+
+        {/* Всплывающее описание */}
+        {description && (
+          <div className="card-tooltip">{description}</div>
+        )}
       </div>
+
       <div className="card-body">
         <h3 className="card-name">{productName}</h3>
         <div className="card-footer">

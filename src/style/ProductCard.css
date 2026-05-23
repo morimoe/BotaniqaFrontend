@@ -145,3 +145,42 @@
   background: #7bc47f;
   color: white;
 }
+
+/* Ховер на карточку */
+.product-card {
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.card-image-wrap {
+  position: relative;
+}
+
+.card-tooltip {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+  background-color: rgba(30, 60, 30, 0.92);
+  color: #f5f0e8;
+  font-size: 0.78rem;
+  padding: 8px 12px;
+  border-radius: 10px;
+  width: 85%;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 10;
+  line-height: 1.4;
+}
+
+.product-card:hover .card-tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}

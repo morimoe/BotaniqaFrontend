@@ -13,7 +13,7 @@ export default function SettingsPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const [adminSection, setAdminSection] = useState<"add" | "edit" | "user" | null>(null);
+  const [adminSection, setAdminSection] = useState<"add" | "edit" | "user" | "deleteProduct" | "deleteUser" | "orders" | null>(null);
 
   const [newProductName, setNewProductName] = useState("");
   const [newProductDescription, setNewProductDescription] = useState("");
@@ -41,69 +41,56 @@ export default function SettingsPage() {
   const [userMsg, setUserMsg] = useState("");
   const [userErr, setUserErr] = useState("");
 
+  const [deleteProductId, setDeleteProductId] = useState("");
+  const [deleteProductMsg, setDeleteProductMsg] = useState("");
+  const [deleteProductErr, setDeleteProductErr] = useState("");
+
+  const [deleteUserId, setDeleteUserId] = useState("");
+  const [deleteUserMsg, setDeleteUserMsg] = useState("");
+  const [deleteUserErr, setDeleteUserErr] = useState("");
+
+  const [orders, setOrders] = useState<any[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersErr, setOrdersErr] = useState("");
+
   const role = localStorage.getItem("role");
   const isAdmin = role?.includes("Admin") ?? false;
 
   const handleSave = async () => {
-    setMessage("");
-    setError("");
-
+    setMessage(""); setError("");
     const data: { username?: string; email?: string; password?: string } = {};
     if (username) data.username = username;
     if (email) data.email = email;
     if (password) data.password = password;
-
-    if (Object.keys(data).length === 0) {
-      setError("Заполни хотя бы одно поле");
-      return;
-    }
-
+    if (Object.keys(data).length === 0) { setError("Заполни хотя бы одно поле"); return; }
     try {
       const token = localStorage.getItem("token");
       const response = await fetch("https://localhost:7266/api/user/me", {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(data),
       });
-
       if (!response.ok) throw new Error();
-
-      if (username) {
-        localStorage.setItem("username", username);
-        window.dispatchEvent(new Event("storage"));
-      }
-
+      if (username) { localStorage.setItem("username", username); window.dispatchEvent(new Event("storage")); }
       setMessage("Данные успешно обновлены!");
-      setUsername("");
-      setEmail("");
-      setPassword("");
+      setUsername(""); setEmail(""); setPassword("");
     } catch {
       setError("Ошибка при обновлении. Попробуй ещё раз.");
     }
   };
 
   const handleAddProduct = async () => {
-    setAddMsg("");
-    setAddErr("");
+    setAddMsg(""); setAddErr("");
+    const price = parseFloat(newProductPrice);
+    if (isNaN(price) || price <= 0) { setAddErr("Цена должна быть больше нуля"); return; }
+    const stock = parseInt(newProductStock);
+    if (isNaN(stock) || stock <= 0) { setAddErr("Количество должно быть больше нуля"); return; }
     try {
       const token = localStorage.getItem("token");
       const response = await fetch("https://localhost:7266/api/product", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          productName: newProductName,
-          description: newProductDescription,
-          price: parseFloat(newProductPrice),
-          category: newProductCategory,
-          image: newProductImage,
-          stock: newProductStock ? parseInt(newProductStock) : 0,
-        }),
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ productName: newProductName, description: newProductDescription, price, category: newProductCategory, image: newProductImage, stock }),
       });
       if (!response.ok) throw new Error();
       setAddMsg("Товар добавлен!");
@@ -115,27 +102,29 @@ export default function SettingsPage() {
   };
 
   const handleEditProduct = async () => {
-    setEditMsg("");
-    setEditErr("");
+    setEditMsg(""); setEditErr("");
     const data: Record<string, string | number | boolean> = {};
     if (editName) data.productName = editName;
     if (editDescription) data.description = editDescription;
-    if (editPrice) data.price = parseFloat(editPrice);
+    if (editPrice) {
+      const price = parseFloat(editPrice);
+      if (isNaN(price) || price <= 0) { setEditErr("Цена должна быть больше нуля"); return; }
+      data.price = price;
+    }
     if (editCategory) data.category = editCategory;
     if (editImage) data.image = editImage;
-    if (editStock) data.stock = parseInt(editStock);
-
+    if (editStock) {
+      const stock = parseInt(editStock);
+      if (isNaN(stock) || stock <= 0) { setEditErr("Количество должно быть больше нуля"); return; }
+      data.stock = stock;
+    }
     if (!editProductId) { setEditErr("Укажи ID товара"); return; }
     if (Object.keys(data).length === 0) { setEditErr("Заполни хотя бы одно поле"); return; }
-
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(`https://localhost:7266/api/product/${editProductId}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(data),
       });
       if (!response.ok) throw new Error();
@@ -146,24 +135,18 @@ export default function SettingsPage() {
   };
 
   const handleUpdateUser = async () => {
-    setUserMsg("");
-    setUserErr("");
+    setUserMsg(""); setUserErr("");
     const data: Record<string, string> = {};
     if (targetUsername) data.username = targetUsername;
     if (targetEmail) data.email = targetEmail;
     if (targetRole) data.role = targetRole;
-
     if (!targetUserId) { setUserErr("Укажи ID пользователя"); return; }
     if (Object.keys(data).length === 0) { setUserErr("Заполни хотя бы одно поле"); return; }
-
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(`https://localhost:7266/api/user/${targetUserId}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(data),
       });
       if (!response.ok) throw new Error();
@@ -173,129 +156,122 @@ export default function SettingsPage() {
     }
   };
 
-  // ── Shared styles ──────────────────────────────────────────────
+  const handleDeleteProduct = async () => {
+    setDeleteProductMsg(""); setDeleteProductErr("");
+    if (!deleteProductId) { setDeleteProductErr("Укажи ID товара"); return; }
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`https://localhost:7266/api/product/${deleteProductId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error();
+      setDeleteProductMsg("Товар удалён!");
+      setDeleteProductId("");
+    } catch {
+      setDeleteProductErr("Ошибка при удалении товара.");
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    setDeleteUserMsg(""); setDeleteUserErr("");
+    if (!deleteUserId) { setDeleteUserErr("Укажи ID пользователя"); return; }
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`https://localhost:7266/api/user/${deleteUserId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error();
+      setDeleteUserMsg("Пользователь удалён!");
+      setDeleteUserId("");
+    } catch {
+      setDeleteUserErr("Ошибка при удалении пользователя.");
+    }
+  };
+
+  const fetchOrders = async () => {
+  setOrdersLoading(true); setOrdersErr("");
+  try {
+    const token = localStorage.getItem("token");
+    console.log("token:", token);
+    const res = await fetch("https://localhost:7266/api/order/all", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    console.log("status:", res.status);
+    const data = await res.json();
+    console.log("data:", data);
+    if (!res.ok) throw new Error();
+    setOrders(data);
+  } catch (e) {
+    console.log("error:", e);
+    setOrdersErr("Ошибка при загрузке заказов.");
+  } finally {
+    setOrdersLoading(false);
+  }
+};
+
+  const handleDeleteOrder = async (id: number) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`https://localhost:7266/api/order/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error();
+      setOrders(prev => prev.filter(o => o.id !== id));
+    } catch {
+      setOrdersErr("Ошибка при удалении заказа.");
+    }
+  };
 
   const inputStyle: React.CSSProperties = {
-    // KEY FIX: min-width:0 lets flex children shrink below their content size
-    minWidth: 0,
-    flex: 1,
-    padding: "8px 16px",
-    borderRadius: "20px",
-    border: "2px solid #5a7a5a",
-    background: "transparent",
-    color: "#333",
-    fontFamily: "Caveat, cursive",
-    fontSize: "1rem",
-    outline: "none",
-    // KEY FIX: ensure padding doesn't add to width
-    boxSizing: "border-box",
+    minWidth: 0, flex: 1, padding: "8px 16px", borderRadius: "20px",
+    border: "2px solid #5a7a5a", background: "transparent", color: "#333",
+    fontFamily: "Caveat, cursive", fontSize: "1rem", outline: "none", boxSizing: "border-box",
   };
 
   const labelStyle: React.CSSProperties = {
-    fontFamily: "Caveat, cursive",
-    fontSize: "1.1rem",
-    // KEY FIX: fixed label width so it doesn't squeeze the input
-    width: "160px",
-    flexShrink: 0,
-    color: "#333",
+    fontFamily: "Caveat, cursive", fontSize: "1.1rem",
+    width: "160px", flexShrink: 0, color: "#333",
   };
 
   const rowStyle: React.CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    gap: "12px",
-    // KEY FIX: row must not overflow its card
-    width: "100%",
-    boxSizing: "border-box",
+    display: "flex", alignItems: "center", gap: "12px", width: "100%", boxSizing: "border-box",
   };
 
   const cardStyle: React.CSSProperties = {
-    background: "var(--cream)",
-    borderRadius: "16px",
-    padding: "32px",
-    display: "flex",
-    flexDirection: "column",
-    gap: "16px",
-    // KEY FIX: prevent card from growing wider than its container
-    boxSizing: "border-box",
-    width: "100%",
+    background: "var(--cream)", borderRadius: "16px", padding: "32px",
+    display: "flex", flexDirection: "column", gap: "16px", boxSizing: "border-box", width: "100%",
   };
 
   const adminBtnStyle = (active: boolean): React.CSSProperties => ({
-    padding: "10px 20px",
-    borderRadius: "20px",
-    border: "2px solid #5a7a5a",
+    padding: "10px 20px", borderRadius: "20px", border: "2px solid #5a7a5a",
     background: active ? "#3d5c3d" : "transparent",
     color: active ? "var(--cream)" : "#3d5c3d",
-    fontFamily: "Caveat, cursive",
-    fontSize: "1.1rem",
-    cursor: "pointer",
-    transition: "all 0.2s",
-    whiteSpace: "nowrap",
+    fontFamily: "Caveat, cursive", fontSize: "1.1rem", cursor: "pointer",
+    transition: "all 0.2s", whiteSpace: "nowrap",
   });
 
   const saveButtonStyle: React.CSSProperties = {
-    alignSelf: "center",
-    padding: "10px 28px",
-    borderRadius: "20px",
-    border: "none",
-    background: "#3d5c3d",
-    color: "var(--cream)",
-    fontFamily: "Caveat, cursive",
-    fontSize: "1.1rem",
-    cursor: "pointer",
+    alignSelf: "center", padding: "10px 28px", borderRadius: "20px", border: "none",
+    background: "#3d5c3d", color: "var(--cream)", fontFamily: "Caveat, cursive",
+    fontSize: "1.1rem", cursor: "pointer",
   };
 
   const msgStyle = (isError: boolean): React.CSSProperties => ({
-    color: isError ? "red" : "green",
-    fontFamily: "Caveat, cursive",
-    fontSize: "1.1rem",
-    margin: 0,
+    color: isError ? "red" : "green", fontFamily: "Caveat, cursive", fontSize: "1.1rem", margin: 0,
   });
 
   return (
     <div className="app">
-      <Header
-        search=""
-        onSearchChange={() => {}}
-        onCategoryChange={() => navigate("/")}
-      />
+      <Header search="" onSearchChange={() => {}} onCategoryChange={() => navigate("/")} />
 
-      <div
-        style={{
-          padding: "32px",
-          display: "flex",
-          gap: "32px",
-          alignItems: "flex-start",
-          justifyContent: isAdmin ? "flex-start" : "center",
-          minHeight: "calc(100vh - 140px)",
-          flexWrap: "wrap",
-          boxSizing: "border-box",
-        }}
-      >
-        {/* ── Left: Account Settings ── */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: "16px",
-            // KEY FIX: fixed width so it doesn't grow/shrink unexpectedly
-            width: "380px",
-            flexShrink: 0,
-          }}
-        >
-          <h2
-            style={{
-              fontFamily: "Caveat, cursive",
-              color: "var(--cream)",
-              fontSize: "2rem",
-              margin: 0,
-            }}
-          >
-            Настройки аккаунта
-          </h2>
+      <div style={{ padding: "32px", display: "flex", gap: "32px", alignItems: "flex-start", justifyContent: isAdmin ? "flex-start" : "center", minHeight: "calc(100vh - 140px)", flexWrap: "wrap", boxSizing: "border-box" }}>
 
+        {/* Настройки аккаунта */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", width: "380px", flexShrink: 0 }}>
+          <h2 style={{ fontFamily: "Caveat, cursive", color: "var(--cream)", fontSize: "2rem", margin: 0 }}>Настройки аккаунта</h2>
           <div style={cardStyle}>
             {[
               { label: "Изменить имя", value: username, setter: setUsername, type: "text" },
@@ -304,71 +280,31 @@ export default function SettingsPage() {
             ].map(({ label, value, setter, type }) => (
               <div key={label} style={rowStyle}>
                 <label style={labelStyle}>{label}</label>
-                <input
-                  type={type}
-                  value={value}
-                  onChange={(e) => setter(e.target.value)}
-                  style={inputStyle}
-                />
+                <input type={type} value={value} onChange={(e) => setter(e.target.value)} style={inputStyle} />
               </div>
             ))}
-
             {message && <p style={msgStyle(false)}>{message}</p>}
             {error && <p style={msgStyle(true)}>{error}</p>}
-
-            <button onClick={handleSave} style={saveButtonStyle}>
-              Сохранить
-            </button>
+            <button onClick={handleSave} style={saveButtonStyle}>Сохранить</button>
           </div>
         </div>
 
-        {/* ── Right: Admin Panel ── */}
+        {/* Админ панель */}
         {isAdmin && (
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "16px",
-              // KEY FIX: flex:1 with min-width:0 so it shrinks properly
-              flex: 1,
-              minWidth: 0,
-              maxWidth: "580px",
-            }}
-          >
-            <h2
-              style={{
-                fontFamily: "Caveat, cursive",
-                color: "var(--cream)",
-                fontSize: "2rem",
-                margin: 0,
-              }}
-            >
-              Привилегии администратора
-            </h2>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", flex: 1, minWidth: 0, maxWidth: "620px" }}>
+            <h2 style={{ fontFamily: "Caveat, cursive", color: "var(--cream)", fontSize: "2rem", margin: 0 }}>Привилегии администратора</h2>
 
-            {/* Action buttons */}
-            <div
-              style={{
-                ...cardStyle,
-                padding: "24px 32px",
-                flexDirection: "row",
-                flexWrap: "wrap",
-                justifyContent: "center",
-              }}
-            >
-              <button style={adminBtnStyle(adminSection === "add")} onClick={() => setAdminSection(adminSection === "add" ? null : "add")}>
-                Добавить товар
-              </button>
-              <button style={adminBtnStyle(adminSection === "edit")} onClick={() => setAdminSection(adminSection === "edit" ? null : "edit")}>
-                Изменить существующий товар
-              </button>
-              <button style={adminBtnStyle(adminSection === "user")} onClick={() => setAdminSection(adminSection === "user" ? null : "user")}>
-                Обновить данные о пользователе
-              </button>
+            {/* Кнопки */}
+            <div style={{ ...cardStyle, padding: "24px 32px", flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: "10px" }}>
+              <button style={adminBtnStyle(adminSection === "add")} onClick={() => setAdminSection(adminSection === "add" ? null : "add")}>Добавить товар</button>
+              <button style={adminBtnStyle(adminSection === "edit")} onClick={() => setAdminSection(adminSection === "edit" ? null : "edit")}>Изменить товар</button>
+              <button style={adminBtnStyle(adminSection === "deleteProduct")} onClick={() => setAdminSection(adminSection === "deleteProduct" ? null : "deleteProduct")}>Удалить товар</button>
+              <button style={adminBtnStyle(adminSection === "user")} onClick={() => setAdminSection(adminSection === "user" ? null : "user")}>Обновить пользователя</button>
+              <button style={adminBtnStyle(adminSection === "deleteUser")} onClick={() => setAdminSection(adminSection === "deleteUser" ? null : "deleteUser")}>Удалить пользователя</button>
+              <button style={adminBtnStyle(adminSection === "orders")} onClick={() => { setAdminSection(adminSection === "orders" ? null : "orders"); fetchOrders(); }}>Активные заказы</button>
             </div>
 
-            {/* Add product form */}
+            {/* Добавить товар */}
             {adminSection === "add" && (
               <div style={{ ...cardStyle, padding: "24px 32px" }}>
                 {[
@@ -377,11 +313,11 @@ export default function SettingsPage() {
                   { label: "Цена", value: newProductPrice, setter: setNewProductPrice, type: "number" },
                   { label: "Категория", value: newProductCategory, setter: setNewProductCategory, type: "text" },
                   { label: "Картинка (URL)", value: newProductImage, setter: setNewProductImage, type: "text" },
-                  { label: "Количество (число)", value: newProductStock, setter: setNewProductStock, type: "text" },
+                  { label: "Количество", value: newProductStock, setter: setNewProductStock, type: "number" },
                 ].map(({ label, value, setter, type }) => (
                   <div key={label} style={rowStyle}>
                     <label style={labelStyle}>{label}</label>
-                    <input type={type} value={value} onChange={(e) => setter(e.target.value)} style={inputStyle} />
+                    <input type={type} value={value} onChange={(e) => setter(e.target.value)} style={inputStyle} min={type === "number" ? "1" : undefined} />
                   </div>
                 ))}
                 {addMsg && <p style={msgStyle(false)}>{addMsg}</p>}
@@ -390,7 +326,7 @@ export default function SettingsPage() {
               </div>
             )}
 
-            {/* Edit product form */}
+            {/* Изменить товар */}
             {adminSection === "edit" && (
               <div style={{ ...cardStyle, padding: "24px 32px" }}>
                 <div style={rowStyle}>
@@ -403,11 +339,11 @@ export default function SettingsPage() {
                   { label: "Изменить цену", value: editPrice, setter: setEditPrice, type: "number" },
                   { label: "Изменить категорию", value: editCategory, setter: setEditCategory, type: "text" },
                   { label: "Изменить картинку", value: editImage, setter: setEditImage, type: "text" },
-                  { label: "Изменить наличие", value: editStock, setter: setEditStock, type: "text" },
+                  { label: "Изменить наличие", value: editStock, setter: setEditStock, type: "number" },
                 ].map(({ label, value, setter, type }) => (
                   <div key={label} style={rowStyle}>
                     <label style={labelStyle}>{label}</label>
-                    <input type={type} value={value} onChange={(e) => setter(e.target.value)} style={inputStyle} />
+                    <input type={type} value={value} onChange={(e) => setter(e.target.value)} style={inputStyle} min={type === "number" ? "1" : undefined} />
                   </div>
                 ))}
                 {editMsg && <p style={msgStyle(false)}>{editMsg}</p>}
@@ -416,7 +352,20 @@ export default function SettingsPage() {
               </div>
             )}
 
-            {/* Update user form */}
+            {/* Удалить товар */}
+            {adminSection === "deleteProduct" && (
+              <div style={{ ...cardStyle, padding: "24px 32px" }}>
+                <div style={rowStyle}>
+                  <label style={labelStyle}>ID товара</label>
+                  <input type="text" value={deleteProductId} onChange={(e) => setDeleteProductId(e.target.value)} style={inputStyle} placeholder="обязательно" />
+                </div>
+                {deleteProductMsg && <p style={msgStyle(false)}>{deleteProductMsg}</p>}
+                {deleteProductErr && <p style={msgStyle(true)}>{deleteProductErr}</p>}
+                <button onClick={handleDeleteProduct} style={{ ...saveButtonStyle, background: "#8b2020" }}>Удалить</button>
+              </div>
+            )}
+
+            {/* Обновить пользователя */}
             {adminSection === "user" && (
               <div style={{ ...cardStyle, padding: "24px 32px" }}>
                 <div style={rowStyle}>
@@ -438,6 +387,53 @@ export default function SettingsPage() {
                 <button onClick={handleUpdateUser} style={saveButtonStyle}>Обновить</button>
               </div>
             )}
+
+            {/* Удалить пользователя */}
+            {adminSection === "deleteUser" && (
+              <div style={{ ...cardStyle, padding: "24px 32px" }}>
+                <div style={rowStyle}>
+                  <label style={labelStyle}>ID пользователя</label>
+                  <input type="text" value={deleteUserId} onChange={(e) => setDeleteUserId(e.target.value)} style={inputStyle} placeholder="обязательно" />
+                </div>
+                {deleteUserMsg && <p style={msgStyle(false)}>{deleteUserMsg}</p>}
+                {deleteUserErr && <p style={msgStyle(true)}>{deleteUserErr}</p>}
+                <button onClick={handleDeleteUser} style={{ ...saveButtonStyle, background: "#8b2020" }}>Удалить</button>
+              </div>
+            )}
+
+            {/* Активные заказы */}
+            {adminSection === "orders" && (
+              <div style={{ ...cardStyle, padding: "24px 32px" }}>
+                <h3 style={{ fontFamily: "Caveat, cursive", fontSize: "1.4rem", color: "#333", margin: 0 }}>Активные заказы</h3>
+                {ordersLoading && <p style={{ fontFamily: "Caveat, cursive", color: "#333" }}>Загрузка...</p>}
+                {ordersErr && <p style={{ fontFamily: "Caveat, cursive", color: "red" }}>{ordersErr}</p>}
+                {orders.length === 0 && !ordersLoading && (
+                  <p style={{ fontFamily: "Caveat, cursive", color: "#333" }}>Заказов нет</p>
+                )}
+                {orders.map(order => (
+                  <div key={order.id} style={{ border: "2px solid #5a7a5a", borderRadius: "12px", padding: "16px", display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontFamily: "Caveat, cursive", fontSize: "1.2rem", color: "#333", fontWeight: 700 }}>Заказ #{order.id}</span>
+                      <button
+                        onClick={() => handleDeleteOrder(order.id)}
+                        style={{ background: "#8b2020", border: "none", borderRadius: "12px", padding: "6px 14px", color: "white", fontFamily: "Caveat, cursive", fontSize: "1rem", cursor: "pointer" }}
+                      >
+                        Удалить
+                      </button>
+                    </div>
+                    <span style={{ fontFamily: "Caveat, cursive", color: "#555" }}>👤 {order.name} — {order.phone}</span>
+                    <span style={{ fontFamily: "Caveat, cursive", color: "#555" }}>📍 {order.city}, {order.street}, д.{order.house}{order.apartment ? `, кв.${order.apartment}` : ""}</span>
+                    {order.floor && <span style={{ fontFamily: "Caveat, cursive", color: "#555" }}>🏢 Этаж: {order.floor}{order.entrance ? `, подъезд: ${order.entrance}` : ""}{order.intercom ? `, домофон: ${order.intercom}` : ""}</span>}
+                    <span style={{ fontFamily: "Caveat, cursive", color: "#555" }}>💳 {order.paymentMethod === "cash" ? "Наличными" : "Картой курьеру"}</span>
+                    <span style={{ fontFamily: "Caveat, cursive", color: "#333", fontWeight: 700 }}>💰 {order.totalPrice} MDL</span>
+                    <span style={{ fontFamily: "Caveat, cursive", color: "#888", fontSize: "0.9rem" }}>{new Date(order.createdAt).toLocaleString("ru-RU")}</span>
+                    {order.comment && <span style={{ fontFamily: "Caveat, cursive", color: "#555" }}>💬 {order.comment}</span>}
+                    {order.email && <span style={{ fontFamily: "Caveat, cursive", color: "#555" }}>✉️ {order.email}</span>}
+                  </div>
+                ))}
+              </div>
+            )}
+
           </div>
         )}
       </div>
