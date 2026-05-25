@@ -105,13 +105,13 @@
   font-family: sans-serif;
 }
 
-/* NAV */
 .header-nav {
   display: flex;
   gap: 36px;
   padding: 10px 32px;
   border-top: 1px solid rgba(44, 90, 60, 0.15);
   background: var(--cream);
+  align-items: center;
 }
 
 .nav-item {
@@ -132,12 +132,12 @@
   color: var(--green-mid);
 }
 
-/* DROPDOWN */
 .dropdown-menu {
   position: absolute;
   top: calc(100% + 10px);
   left: 0;
   background: var(--cream);
+  background-color: #f5f0dc !important;
   border: 2px solid var(--green-dark);
   border-radius: 12px;
   padding: 8px 0;

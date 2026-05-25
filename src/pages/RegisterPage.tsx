@@ -10,7 +10,7 @@ export default function RegisterPage() {
 
   const handleRegister = async () => {
     try {
-      const response = await fetch("https://localhost:7266/api/user", {
+      const response = await fetch("http://localhost:5029/api/user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, email, password }),

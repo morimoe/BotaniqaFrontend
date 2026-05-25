@@ -4,6 +4,13 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import "../App.css";
 
+const CATEGORIES = [
+  { value: "cacti", label: "Кактусы" },
+  { value: "succulents", label: "Суккуленты" },
+  { value: "orchids", label: "Орхидеи" },
+  { value: "strelitzia", label: "Стрелиции" },
+];
+
 export default function SettingsPage() {
   const navigate = useNavigate();
 
@@ -65,7 +72,7 @@ export default function SettingsPage() {
     if (Object.keys(data).length === 0) { setError("Заполни хотя бы одно поле"); return; }
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("https://localhost:7266/api/user/me", {
+      const response = await fetch("http://localhost:5029/api/user/me", {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(data),
@@ -85,9 +92,10 @@ export default function SettingsPage() {
     if (isNaN(price) || price <= 0) { setAddErr("Цена должна быть больше нуля"); return; }
     const stock = parseInt(newProductStock);
     if (isNaN(stock) || stock <= 0) { setAddErr("Количество должно быть больше нуля"); return; }
+    if (!newProductCategory) { setAddErr("Выбери категорию"); return; }
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("https://localhost:7266/api/product", {
+      const response = await fetch("http://localhost:5029/api/product", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ productName: newProductName, description: newProductDescription, price, category: newProductCategory, image: newProductImage, stock }),
@@ -122,7 +130,7 @@ export default function SettingsPage() {
     if (Object.keys(data).length === 0) { setEditErr("Заполни хотя бы одно поле"); return; }
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`https://localhost:7266/api/product/${editProductId}`, {
+      const response = await fetch(`http://localhost:5029/api/product/${editProductId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(data),
@@ -144,7 +152,7 @@ export default function SettingsPage() {
     if (Object.keys(data).length === 0) { setUserErr("Заполни хотя бы одно поле"); return; }
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`https://localhost:7266/api/user/${targetUserId}`, {
+      const response = await fetch(`http://localhost:5029/api/user/${targetUserId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(data),
@@ -161,7 +169,7 @@ export default function SettingsPage() {
     if (!deleteProductId) { setDeleteProductErr("Укажи ID товара"); return; }
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`https://localhost:7266/api/product/${deleteProductId}`, {
+      const response = await fetch(`http://localhost:5029/api/product/${deleteProductId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -178,7 +186,7 @@ export default function SettingsPage() {
     if (!deleteUserId) { setDeleteUserErr("Укажи ID пользователя"); return; }
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`https://localhost:7266/api/user/${deleteUserId}`, {
+      const response = await fetch(`http://localhost:5029/api/user/${deleteUserId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -191,30 +199,26 @@ export default function SettingsPage() {
   };
 
   const fetchOrders = async () => {
-  setOrdersLoading(true); setOrdersErr("");
-  try {
-    const token = localStorage.getItem("token");
-    console.log("token:", token);
-    const res = await fetch("https://localhost:7266/api/order/all", {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    console.log("status:", res.status);
-    const data = await res.json();
-    console.log("data:", data);
-    if (!res.ok) throw new Error();
-    setOrders(data);
-  } catch (e) {
-    console.log("error:", e);
-    setOrdersErr("Ошибка при загрузке заказов.");
-  } finally {
-    setOrdersLoading(false);
-  }
-};
+    setOrdersLoading(true); setOrdersErr("");
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch("http://localhost:5029/api/order/all", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error();
+      setOrders(data);
+    } catch {
+      setOrdersErr("Ошибка при загрузке заказов.");
+    } finally {
+      setOrdersLoading(false);
+    }
+  };
 
   const handleDeleteOrder = async (id: number) => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`https://localhost:7266/api/order/${id}`, {
+      const res = await fetch(`http://localhost:5029/api/order/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -229,6 +233,16 @@ export default function SettingsPage() {
     minWidth: 0, flex: 1, padding: "8px 16px", borderRadius: "20px",
     border: "2px solid #5a7a5a", background: "transparent", color: "#333",
     fontFamily: "Caveat, cursive", fontSize: "1rem", outline: "none", boxSizing: "border-box",
+  };
+
+  const selectStyle: React.CSSProperties = {
+    ...inputStyle,
+    cursor: "pointer",
+    appearance: "none",
+    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235a7a5a' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`,
+    backgroundRepeat: "no-repeat",
+    backgroundPosition: "right 14px center",
+    paddingRight: "36px",
   };
 
   const labelStyle: React.CSSProperties = {
@@ -311,7 +325,6 @@ export default function SettingsPage() {
                   { label: "Название", value: newProductName, setter: setNewProductName, type: "text" },
                   { label: "Описание", value: newProductDescription, setter: setNewProductDescription, type: "text" },
                   { label: "Цена", value: newProductPrice, setter: setNewProductPrice, type: "number" },
-                  { label: "Категория", value: newProductCategory, setter: setNewProductCategory, type: "text" },
                   { label: "Картинка (URL)", value: newProductImage, setter: setNewProductImage, type: "text" },
                   { label: "Количество", value: newProductStock, setter: setNewProductStock, type: "number" },
                 ].map(({ label, value, setter, type }) => (
@@ -320,6 +333,22 @@ export default function SettingsPage() {
                     <input type={type} value={value} onChange={(e) => setter(e.target.value)} style={inputStyle} min={type === "number" ? "1" : undefined} />
                   </div>
                 ))}
+
+                {/* Категория — выпадающий список */}
+                <div style={rowStyle}>
+                  <label style={labelStyle}>Категория</label>
+                  <select
+                    value={newProductCategory}
+                    onChange={(e) => setNewProductCategory(e.target.value)}
+                    style={selectStyle}
+                  >
+                    <option value="">Выберите категорию</option>
+                    {CATEGORIES.map(c => (
+                      <option key={c.value} value={c.value}>{c.label}</option>
+                    ))}
+                  </select>
+                </div>
+
                 {addMsg && <p style={msgStyle(false)}>{addMsg}</p>}
                 {addErr && <p style={msgStyle(true)}>{addErr}</p>}
                 <button onClick={handleAddProduct} style={saveButtonStyle}>Добавить</button>
@@ -337,7 +366,6 @@ export default function SettingsPage() {
                   { label: "Изменить название", value: editName, setter: setEditName, type: "text" },
                   { label: "Изменить описание", value: editDescription, setter: setEditDescription, type: "text" },
                   { label: "Изменить цену", value: editPrice, setter: setEditPrice, type: "number" },
-                  { label: "Изменить категорию", value: editCategory, setter: setEditCategory, type: "text" },
                   { label: "Изменить картинку", value: editImage, setter: setEditImage, type: "text" },
                   { label: "Изменить наличие", value: editStock, setter: setEditStock, type: "number" },
                 ].map(({ label, value, setter, type }) => (
@@ -346,6 +374,22 @@ export default function SettingsPage() {
                     <input type={type} value={value} onChange={(e) => setter(e.target.value)} style={inputStyle} min={type === "number" ? "1" : undefined} />
                   </div>
                 ))}
+
+                {/* Категория — выпадающий список */}
+                <div style={rowStyle}>
+                  <label style={labelStyle}>Изменить категорию</label>
+                  <select
+                    value={editCategory}
+                    onChange={(e) => setEditCategory(e.target.value)}
+                    style={selectStyle}
+                  >
+                    <option value="">Не менять</option>
+                    {CATEGORIES.map(c => (
+                      <option key={c.value} value={c.value}>{c.label}</option>
+                    ))}
+                  </select>
+                </div>
+
                 {editMsg && <p style={msgStyle(false)}>{editMsg}</p>}
                 {editErr && <p style={msgStyle(true)}>{editErr}</p>}
                 <button onClick={handleEditProduct} style={saveButtonStyle}>Сохранить</button>
@@ -413,8 +457,7 @@ export default function SettingsPage() {
                 {orders.map(order => (
                   <div key={order.id} style={{ border: "2px solid #5a7a5a", borderRadius: "12px", padding: "16px", display: "flex", flexDirection: "column", gap: "6px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontFamily: "Caveat, cursive", fontSize: "1.2rem", color: "#333", fontWeight: 700 }}>Заказ #{order.id}</span>
-                      <button
+                        <span style={{ fontFamily: "Caveat, cursive", fontSize: "1.2rem", color: "#333", fontWeight: 700 }}>Заказ #{orders.indexOf(order) + 1}</span>                      <button
                         onClick={() => handleDeleteOrder(order.id)}
                         style={{ background: "#8b2020", border: "none", borderRadius: "12px", padding: "6px 14px", color: "white", fontFamily: "Caveat, cursive", fontSize: "1rem", cursor: "pointer" }}
                       >
@@ -429,6 +472,16 @@ export default function SettingsPage() {
                     <span style={{ fontFamily: "Caveat, cursive", color: "#888", fontSize: "0.9rem" }}>{new Date(order.createdAt).toLocaleString("ru-RU")}</span>
                     {order.comment && <span style={{ fontFamily: "Caveat, cursive", color: "#555" }}>💬 {order.comment}</span>}
                     {order.email && <span style={{ fontFamily: "Caveat, cursive", color: "#555" }}>✉️ {order.email}</span>}
+                    {order.orderItems && order.orderItems.length > 0 && (
+                      <div style={{ marginTop: "6px" }}>
+                        <span style={{ fontFamily: "Caveat, cursive", color: "#555", fontWeight: 700 }}>🌿 Товары:</span>
+                        {order.orderItems.map((item: any) => (
+                          <div key={item.productId} style={{ fontFamily: "Caveat, cursive", color: "#555", paddingLeft: "16px" }}>
+                            • {item.product?.productName} × {item.quantity} — {item.price * item.quantity} MDL
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

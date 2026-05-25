@@ -10,7 +10,7 @@ export default function LoginPage() {
 
   const handleLogin = async () => {
     try {
-      const response = await fetch("https://localhost:7266/api/user/login", {
+      const response = await fetch("http://localhost:5029/api/user/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ credential, password }),
@@ -39,7 +39,7 @@ export default function LoginPage() {
       // ────────────────────
 
       // ── ЗАГРУЖАЕМ КОРЗИНУ И ИЗБРАННОЕ ИЗ БД ──
-      const cartRes = await fetch("https://localhost:7266/api/cart", {
+      const cartRes = await fetch("http://localhost:5029/api/cart", {
         headers: { Authorization: `Bearer ${data.token}` },
       });
       const cart = await cartRes.json();
@@ -50,7 +50,7 @@ export default function LoginPage() {
       });
       localStorage.setItem("cart", JSON.stringify(cartMap));
 
-      const favRes = await fetch("https://localhost:7266/api/favorites", {
+      const favRes = await fetch("http://localhost:5029/api/favorites", {
         headers: { Authorization: `Bearer ${data.token}` },
       });
       const favs = await favRes.json();

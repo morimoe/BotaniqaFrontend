@@ -45,7 +45,7 @@ export default function CartPage() {
   );
 
   useEffect(() => {
-    fetch("https://localhost:7266/api/product/all")
+    fetch("http://localhost:5029/api/product/all")
       .then((res) => res.json())
       .then(setAllProducts)
       .catch(console.error);
@@ -82,9 +82,13 @@ export default function CartPage() {
   };
 
   const changeQuantity = (id: number, delta: number) => {
+    const product = allProducts.find(p => p.id === id);
     setCartMap(prev => {
-      const newQty = Math.max(1, (prev[id] || 1) + delta);
-      const updated = { ...prev, [id]: newQty };
+      const current = prev[id] || 1;
+      const newQty = Math.max(1, current + delta);
+      // Не даём превысить stock
+      const capped = product ? Math.min(newQty, product.stock) : newQty;
+      const updated = { ...prev, [id]: capped };
       localStorage.setItem("cart", JSON.stringify(updated));
       syncAddToCart(id, delta);
       return updated;
@@ -103,7 +107,7 @@ export default function CartPage() {
   const syncAddToCart = (productId: number, quantity: number) => {
     const token = localStorage.getItem("token");
     if (!token) return;
-    fetch("https://localhost:7266/api/cart", {
+    fetch("http://localhost:5029/api/cart", {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       body: JSON.stringify({ productId, quantity })
@@ -113,7 +117,7 @@ export default function CartPage() {
   const syncRemoveFromCart = (productId: number) => {
     const token = localStorage.getItem("token");
     if (!token) return;
-    fetch(`https://localhost:7266/api/cart/${productId}`, {
+    fetch(`http://localhost:5029/api/cart/${productId}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` }
     });
@@ -124,59 +128,56 @@ export default function CartPage() {
     .reduce((sum, p) => sum + p.price * cartMap[p.id], 0);
 
   const handleOrder = async () => {
-  setOrderErr("");
-  setOrderMsg("");
-  if (!city) { setOrderErr("Выберите город"); return; }
-if (!street) { setOrderErr("Укажите улицу"); return; }
-if (!house) { setOrderErr("Укажите номер дома"); return; }
-if (!apartment) { setOrderErr("Укажите квартиру"); return; }
-if (!name) { setOrderErr("Укажите имя"); return; }
-if (!payMethod) { setOrderErr("Выберите способ оплаты"); return; }
-if (!entrance) { setOrderErr("Введите номер подъезда"); return; }
-if (!floor) { setOrderErr("Введите этаж"); return; }
-if (!intercom) { setOrderErr("Введите номер домофона "); return; }
-if (!phone) { setOrderErr("Введите номер телефона "); return; }
-if (!emailOrder) { setOrderErr("Введите email "); return; }
+    setOrderErr("");
+    setOrderMsg("");
+    if (!city) { setOrderErr("Выберите город"); return; }
+    if (!street) { setOrderErr("Укажите улицу"); return; }
+    if (!house) { setOrderErr("Укажите номер дома"); return; }
+    if (!apartment) { setOrderErr("Укажите квартиру"); return; }
+    if (!name) { setOrderErr("Укажите имя"); return; }
+    if (!payMethod) { setOrderErr("Выберите способ оплаты"); return; }
+    if (!entrance) { setOrderErr("Введите номер подъезда"); return; }
+    if (!floor) { setOrderErr("Введите этаж"); return; }
+    if (!intercom) { setOrderErr("Введите номер домофона"); return; }
+    if (!phone) { setOrderErr("Введите номер телефона"); return; }
+    if (!emailOrder) { setOrderErr("Введите email"); return; }
 
+    const items = cartProducts
+      .filter(p => selected.includes(p.id))
+      .map(p => ({ productId: p.id, quantity: cartMap[p.id], price: p.price }));
 
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://localhost:5029/api/order", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          city, street, house, apartment, entrance, floor,
+          intercom, name, phone, email: emailOrder, comment,
+          paymentMethod: payMethod, items,
+        }),
+      });
 
-
-  const items = cartProducts
-    .filter(p => selected.includes(p.id))
-    .map(p => ({ productId: p.id, quantity: cartMap[p.id], price: p.price }));
-
-  try {
-    const token = localStorage.getItem("token");
-    const response = await fetch("https://localhost:7266/api/order", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify({
-        city, street, house, apartment, entrance, floor,
-        intercom, name, phone, email: emailOrder, comment,
-        paymentMethod: payMethod, items,
-      }),
-    });
-
-    if (!response.ok) throw new Error();
-    setOrderMsg("Заказ оформлен! Спасибо 🌿");
-    localStorage.setItem("cart", "{}");
-    setCartMap({});
-    setSelected([]);
-   window.dispatchEvent(new Event("storage"));
-
-    setTimeout(() => setShowModal(false), 2000);
-      } catch {
-        setOrderErr("Ошибка при оформлении заказа. Попробуй ещё раз.");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        setOrderErr(errorData?.message || "Ошибка при оформлении заказа. Попробуй ещё раз.");
+        return;
       }
-  
 
-};
+      setOrderMsg("Заказ оформлен! Спасибо 🌿");
+      localStorage.setItem("cart", "{}");
+      setCartMap({});
+      setSelected([]);
+      window.dispatchEvent(new Event("storage"));
+      setTimeout(() => setShowModal(false), 2000);
+    } catch {
+      setOrderErr("Ошибка соединения. Проверь интернет и попробуй снова.");
+    }
+  };
 
-
-  // Стили модалки
   const inputS: React.CSSProperties = {
     padding: "10px 14px",
     borderRadius: "20px",
@@ -209,9 +210,15 @@ if (!emailOrder) { setOrderErr("Введите email "); return; }
 
       <div style={{ padding: "32px 48px", display: "flex", gap: "24px", alignItems: "flex-start" }}>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "12px" }}>
+          {/* Шапка корзины */}
           <div style={{ background: "var(--cream)", borderRadius: "16px", padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <label style={{ display: "flex", alignItems: "center", gap: "10px", fontFamily: "Caveat, cursive", fontSize: "1.2rem", color: "var(--green-dark)", cursor: "pointer" }}>
-              <input type="checkbox" checked={selected.length === cartProducts.length && cartProducts.length > 0} onChange={toggleSelectAll} style={{ width: "18px", height: "18px", accentColor: "var(--green-dark)" }} />
+              <input
+                type="checkbox"
+                checked={selected.length === cartProducts.length && cartProducts.length > 0}
+                onChange={toggleSelectAll}
+                style={{ width: "18px", height: "18px", accentColor: "var(--green-dark)" }}
+              />
               Выбрать всё
             </label>
             <button onClick={deleteSelected} style={{ background: "none", border: "none", fontFamily: "Caveat, cursive", fontSize: "1.1rem", color: "var(--green-dark)", cursor: "pointer" }}>
@@ -219,30 +226,68 @@ if (!emailOrder) { setOrderErr("Введите email "); return; }
             </button>
           </div>
 
+          {/* Список товаров */}
           <div style={{ background: "var(--cream)", borderRadius: "16px", padding: "16px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
             {cartProducts.length === 0 ? (
               <p style={{ fontFamily: "Caveat, cursive", fontSize: "1.3rem", color: "var(--green-dark)", textAlign: "center" }}>Корзина пуста</p>
             ) : (
               cartProducts.map(p => (
                 <div key={p.id} style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                  <input type="checkbox" checked={selected.includes(p.id)} onChange={() => toggleSelect(p.id)} style={{ width: "18px", height: "18px", accentColor: "var(--green-dark)" }} />
+                  <input
+                    type="checkbox"
+                    checked={selected.includes(p.id)}
+                    onChange={() => toggleSelect(p.id)}
+                    style={{ width: "18px", height: "18px", accentColor: "var(--green-dark)" }}
+                  />
                   <img src={p.image} alt={p.productName} style={{ width: "80px", height: "80px", objectFit: "cover", borderRadius: "12px" }} />
                   <div style={{ flex: 1 }}>
-                    <p style={{ fontFamily: "Caveat, cursive", fontSize: "1.2rem", color: "var(--green-dark)", textAlign: "left" }}>{p.productName}</p>
+                    <p style={{ fontFamily: "Caveat, cursive", fontSize: "1.2rem", color: "var(--green-dark)", textAlign: "left", margin: 0 }}>
+                      {p.productName}
+                    </p>
+
+                    {/* Предупреждение о stock */}
+                    {p.stock === 0 && (
+                      <span style={{ display: "block", color: "red", fontFamily: "Caveat, cursive", fontSize: "0.95rem", marginTop: "2px" }}>
+                        ❌ Товар закончился
+                      </span>
+                    )}
+                    {p.stock > 0 && p.stock <= 5 && (
+                      <span style={{ display: "block", color: "#b85c00", fontFamily: "Caveat, cursive", fontSize: "0.95rem", marginTop: "2px" }}>
+                        ⚠️ Осталось {p.stock} шт.
+                      </span>
+                    )}
+
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px" }}>
-                      <button onClick={() => changeQuantity(p.id, -1)} style={{ background: "none", border: "none", fontSize: "1.1rem", cursor: "pointer", color: "var(--green-dark)" }}>−</button>
+                      <button
+                        onClick={() => changeQuantity(p.id, -1)}
+                        style={{ background: "none", border: "none", fontSize: "1.1rem", cursor: "pointer", color: "var(--green-dark)" }}
+                      >−</button>
                       <span style={{ fontFamily: "Caveat, cursive", fontSize: "1.1rem", color: "var(--green-dark)" }}>{cartMap[p.id]}</span>
-                      <button onClick={() => changeQuantity(p.id, 1)} style={{ background: "none", border: "none", fontSize: "1.1rem", cursor: "pointer", color: "var(--green-dark)" }}>+</button>
+                      {/* Кнопка + заблокирована если достигли stock */}
+                      <button
+                        onClick={() => changeQuantity(p.id, 1)}
+                        disabled={cartMap[p.id] >= p.stock}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          fontSize: "1.1rem",
+                          cursor: cartMap[p.id] >= p.stock ? "not-allowed" : "pointer",
+                          color: cartMap[p.id] >= p.stock ? "#aaa" : "var(--green-dark)",
+                        }}
+                      >+</button>
                       <button onClick={() => deleteOne(p.id)} style={{ background: "none", border: "none", fontSize: "1.1rem", cursor: "pointer", color: "var(--green-dark)" }}>🗑</button>
                     </div>
                   </div>
-                  <span style={{ fontFamily: "Caveat, cursive", fontSize: "1.3rem", color: "var(--green-dark)", fontWeight: 700 }}>MDL {p.price * cartMap[p.id]}</span>
+                  <span style={{ fontFamily: "Caveat, cursive", fontSize: "1.3rem", color: "var(--green-dark)", fontWeight: 700 }}>
+                    MDL {p.price * cartMap[p.id]}
+                  </span>
                 </div>
               ))
             )}
           </div>
         </div>
 
+        {/* Блок оплаты */}
         <div style={{ width: "320px", background: "var(--cream)", borderRadius: "16px", padding: "32px", display: "flex", flexDirection: "column", gap: "20px" }}>
           <h2 style={{ fontFamily: "Caveat, cursive", fontSize: "2rem", color: "var(--green-dark)" }}>Оплата</h2>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
@@ -266,7 +311,6 @@ if (!emailOrder) { setOrderErr("Введите email "); return; }
         >
           <div style={{ background: "var(--cream)", borderRadius: "20px", padding: "32px", width: "100%", maxWidth: "860px", maxHeight: "90vh", overflowY: "auto", position: "relative", display: "flex", gap: "32px", flexWrap: "wrap" }}>
 
-            {/* Кнопка закрыть */}
             <button
               onClick={() => setShowModal(false)}
               style={{ position: "absolute", top: "16px", right: "16px", background: "none", border: "none", fontSize: "1.4rem", cursor: "pointer", color: "#3d5c3d" }}
@@ -276,7 +320,6 @@ if (!emailOrder) { setOrderErr("Введите email "); return; }
             <div style={{ flex: 1, minWidth: "260px", display: "flex", flexDirection: "column", gap: "12px" }}>
               <h3 style={{ fontFamily: "Caveat, cursive", fontSize: "1.5rem", color: "var(--green-dark)", margin: 0 }}>Куда доставить?</h3>
 
-              {/* Город */}
               <select value={city} onChange={e => setCity(e.target.value)} style={{ ...inputS, appearance: "none" }}>
                 <option value="">Выберите город</option>
                 {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
@@ -285,14 +328,16 @@ if (!emailOrder) { setOrderErr("Введите email "); return; }
               <input style={inputS} placeholder="Улица*" value={street} onChange={e => setStreet(e.target.value)} />
 
               <div style={{ display: "flex", gap: "10px" }}>
-              <input style={{ ...inputS, flex: 1 }} type="number" placeholder="Номер дома*" value={house} onChange={e => { if (Number(e.target.value) >= 1 || e.target.value === "") setHouse(e.target.value); }} min="1" />               
-              <input style={{ ...inputS, flex: 1 }} type="number" placeholder="Квартира*" value={apartment} onChange={e => { if (Number(e.target.value) >= 1 || e.target.value === "") setApartment(e.target.value); }} min="1" />             
-               </div>
+                <input style={{ ...inputS, flex: 1 }} type="number" placeholder="Номер дома*" value={house} onChange={e => { if (Number(e.target.value) >= 1 || e.target.value === "") setHouse(e.target.value); }} min="1" />
+                <input style={{ ...inputS, flex: 1 }} type="number" placeholder="Квартира*" value={apartment} onChange={e => { if (Number(e.target.value) >= 1 || e.target.value === "") setApartment(e.target.value); }} min="1" />
+              </div>
+
               <div style={{ display: "flex", gap: "10px" }}>
-              <input style={{ ...inputS, flex: 1 }} type="number" placeholder="Подъезд*" value={entrance} onChange={e => { if (Number(e.target.value) >= 1 || e.target.value === "") setEntrance(e.target.value); }} min="1" />             
-              <input style={{ ...inputS, flex: 1 }} type="number" placeholder="Этаж*" value={floor} onChange={e => { if (Number(e.target.value) >= 1 || e.target.value === "") setFloor(e.target.value); }} min="1" />
-             <input style={{ ...inputS, flex: 1 }} type="number" placeholder="Домофон*" value={intercom} onChange={e => { if (Number(e.target.value) >= 1 || e.target.value === "") setIntercom(e.target.value); }} min="1" />             
-             </div>
+                <input style={{ ...inputS, flex: 1 }} type="number" placeholder="Подъезд*" value={entrance} onChange={e => { if (Number(e.target.value) >= 1 || e.target.value === "") setEntrance(e.target.value); }} min="1" />
+                <input style={{ ...inputS, flex: 1 }} type="number" placeholder="Этаж*" value={floor} onChange={e => { if (Number(e.target.value) >= 1 || e.target.value === "") setFloor(e.target.value); }} min="1" />
+                <input style={{ ...inputS, flex: 1 }} type="number" placeholder="Домофон*" value={intercom} onChange={e => { if (Number(e.target.value) >= 1 || e.target.value === "") setIntercom(e.target.value); }} min="1" />
+              </div>
+
               <input style={inputS} placeholder="Имя*" value={name} onChange={e => setName(e.target.value)} />
               <input style={inputS} placeholder="+373 (__)____-____" value={phone} onChange={e => setPhone(e.target.value)} />
               <input style={inputS} placeholder="Почта*" value={emailOrder} onChange={e => setEmailOrder(e.target.value)} />
@@ -326,8 +371,12 @@ if (!emailOrder) { setOrderErr("Введите email "); return; }
                 </div>
               </div>
 
-              {orderErr && <p style={{ color: "red", fontFamily: "Caveat, cursive", fontSize: "1rem", margin: 0 }}>{orderErr}</p>}
-              {orderMsg && <p style={{ color: "green", fontFamily: "Caveat, cursive", fontSize: "1rem", margin: 0 }}>{orderMsg}</p>}
+              {orderErr && (
+                <p style={{ color: "red", fontFamily: "Caveat, cursive", fontSize: "1rem", margin: 0 }}>{orderErr}</p>
+              )}
+              {orderMsg && (
+                <p style={{ color: "green", fontFamily: "Caveat, cursive", fontSize: "1rem", margin: 0 }}>{orderMsg}</p>
+              )}
 
               <button
                 onClick={handleOrder}

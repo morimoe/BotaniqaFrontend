@@ -15,6 +15,7 @@ type ProductListProps = {
 export default function ProductList({
   products,
   favorites,
+  cartMap,
   onAddToCart,
   onToggleFavorite,
 }: ProductListProps) {
@@ -31,6 +32,7 @@ export default function ProductList({
                 <ProductCard
                   key={p.id}
                   {...p}
+                  cartQuantity={cartMap[p.id] || 0}
                   isFavorite={favorites.includes(p.id)}
                   onAddToCart={() => onAddToCart(p.id)}
                   onToggleFavorite={() => onToggleFavorite(p.id)}

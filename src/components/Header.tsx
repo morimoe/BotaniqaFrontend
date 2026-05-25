@@ -184,7 +184,7 @@ export default function Header({
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
-          <button className="nav-link" onClick={() => onCategoryChange("all")}>
+          <button className="nav-link nav-link--catalog" onClick={() => onCategoryChange("all")}>
             Каталог ∨
           </button>
           {dropdownOpen && (

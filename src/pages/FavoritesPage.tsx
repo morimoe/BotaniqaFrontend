@@ -21,7 +21,7 @@ export default function FavoritesPage() {
   );
 
   useEffect(() => {
-    fetch("https://localhost:7266/api/product/all")
+    fetch("http://localhost:5029/api/product/all")
       .then((res) => res.json())
       .then((data) => {
         setAllProducts(data);

@@ -32,7 +32,7 @@ export default function HomePage() {
   const [sort, setSort] = useState<SortOption>("default");
 
   useEffect(() => {
-    fetch("https://localhost:7266/api/product/all")
+    fetch("http://localhost:5029/api/product/all")
       .then((res) => res.json())
       .then(setProducts)
       .catch(console.error);
@@ -71,7 +71,7 @@ export default function HomePage() {
       window.dispatchEvent(new Event("favoritesUpdated"));
       const token = localStorage.getItem("token");
       if (token) {
-        fetch(`https://localhost:7266/api/favorites/${id}`, {
+        fetch(`http://localhost:5029/api/favorites/${id}`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -80,26 +80,34 @@ export default function HomePage() {
     });
   };
 
-  const handleAddToCart = (id: number) => {
-    setCartMap((prev) => {
-      const updated = { ...prev, [id]: (prev[id] || 0) + 1 };
-      localStorage.setItem("cart", JSON.stringify(updated));
-      // Уведомляем Header об изменении корзины
-      window.dispatchEvent(new Event("cartUpdated"));
-      const token = localStorage.getItem("token");
-      if (token) {
-        fetch("https://localhost:7266/api/cart", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ productId: id, quantity: 1 }),
-        });
-      }
-      return updated;
-    });
-  };
+const handleAddToCart = (id: number) => {
+  const product = products.find(p => p.id === id);
+  if (!product) return;
+
+  setCartMap((prev) => {
+    const current = prev[id] || 0;
+
+    // Не даём добавить больше чем есть в stock
+    if (current >= product.stock) return prev;
+
+    const updated = { ...prev, [id]: current + 1 };
+    localStorage.setItem("cart", JSON.stringify(updated));
+    window.dispatchEvent(new Event("cartUpdated"));
+
+    const token = localStorage.getItem("token");
+    if (token) {
+      fetch("http://localhost:5029/api/cart", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ productId: id, quantity: 1 }),
+      });
+    }
+    return updated;
+  });
+};
 
   return (
     <div className="app">

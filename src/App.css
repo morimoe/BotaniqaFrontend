@@ -14,7 +14,7 @@
 }
 
 body {
-  background: var(--green-dark);
+  background: #93A26A; /* цвет по бокам */
   font-family: 'Caveat', cursive;
   min-height: 100vh;
 }
@@ -23,6 +23,9 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  width: 1125px; /* фиксированная ширина */
+  margin: 0 auto;
+  background: var(--green-dark);
 }
 
 .state-screen {
@@ -38,4 +41,20 @@ body {
 
 .error-screen {
   color: #ff9a9a;
+}
+
+.nav-link.active,
+.nav-link--catalog {
+  background-color: var(--green-dark);
+  color: var(--cream) !important;
+  padding: 4px 14px;
+  border-radius: 8px;
+  border: 2px solid var(--green-dark);
+  transition: background 0.2s, color 0.2s;
+}
+
+.nav-link.active:hover,
+.nav-link--catalog:hover {
+  background-color: var(--cream);
+  color: var(--green-dark) !important;
 }
