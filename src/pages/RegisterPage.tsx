@@ -9,6 +9,23 @@ export default function RegisterPage() {
   const navigate = useNavigate();
 
   const handleRegister = async () => {
+    if (!username.trim() || !email.trim() || !password.trim()) {
+      setError("Все поля обязательны для заполнения");
+      return;
+    }
+    if (username.trim().length < 3) {
+      setError("Никнейм должен быть минимум 3 символа");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Введите корректный email");
+      return;
+    }
+    if (password.length < 6) {
+      setError("Пароль должен быть минимум 6 символов");
+      return;
+    }
+
     try {
       const response = await fetch("http://localhost:5029/api/user", {
         method: "POST",
@@ -62,13 +79,13 @@ export default function RegisterPage() {
         <div style={{ background: "var(--cream)", borderRadius: "20px", padding: "40px", width: "340px", display: "flex", flexDirection: "column", gap: "16px" }}>
 
           {error && (
-            <p style={{ color: "red", fontFamily: "Caveat, cursive", fontSize: "1.1rem", textAlign: "center" }}>{error}</p>
+            <p style={{ color: "red", fontFamily: "Caveat, cursive", fontSize: "1.1rem", textAlign: "center", margin: 0 }}>{error}</p>
           )}
 
           <input
             placeholder="Никнейм"
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={(e) => { setUsername(e.target.value); setError(""); }}
             style={inputStyle}
           />
 
@@ -76,7 +93,7 @@ export default function RegisterPage() {
             placeholder="Почта"
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => { setEmail(e.target.value); setError(""); }}
             style={inputStyle}
           />
 
@@ -84,7 +101,7 @@ export default function RegisterPage() {
             placeholder="Пароль"
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => { setPassword(e.target.value); setError(""); }}
             style={inputStyle}
           />
 
@@ -106,7 +123,7 @@ export default function RegisterPage() {
             Регистрация
           </button>
 
-          <p style={{ textAlign: "center", fontFamily: "Caveat, cursive", fontSize: "1rem", color: "var(--green-dark)" }}>
+          <p style={{ textAlign: "center", fontFamily: "Caveat, cursive", fontSize: "1rem", color: "var(--green-dark)", margin: 0 }}>
             Уже зарегистрировались?{" "}
             <span
               onClick={() => navigate("/login")}

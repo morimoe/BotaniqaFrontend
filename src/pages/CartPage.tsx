@@ -130,6 +130,8 @@ export default function CartPage() {
   const handleOrder = async () => {
     setOrderErr("");
     setOrderMsg("");
+
+    if (selected.length === 0) { setOrderErr("Добавьте хотя бы один товар в заказ"); return; }
     if (!city) { setOrderErr("Выберите город"); return; }
     if (!street) { setOrderErr("Укажите улицу"); return; }
     if (!house) { setOrderErr("Укажите номер дома"); return; }
@@ -295,8 +297,12 @@ export default function CartPage() {
             <span style={{ fontFamily: "Caveat, cursive", fontSize: "1.2rem", color: "var(--green-dark)", fontWeight: 700 }}>MDL {total}</span>
           </div>
           <button
-            onClick={() => setShowModal(true)}
-            style={{ padding: "14px", background: "var(--green-dark)", color: "var(--cream)", border: "none", borderRadius: "12px", fontFamily: "Caveat, cursive", fontSize: "1.3rem", cursor: "pointer" }}
+              onClick={() => {
+                if (selected.length === 0) return;
+                setShowModal(true);
+              }}
+              disabled={selected.length === 0}
+            style={{ padding: "14px", background: "var(--green-dark)", color: "var(--cream)", border: "none", borderRadius: "12px", fontFamily: "Caveat, cursive", fontSize: "1.3rem", cursor: selected.length === 0 ? "not-allowed" : "pointer", }}
           >
             Оформить заказ
           </button>
